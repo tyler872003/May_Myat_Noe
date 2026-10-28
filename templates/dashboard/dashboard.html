@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+  .budget-alert-over { border-left: 4px solid #ef4444; }
+  .budget-alert-warning { border-left: 4px solid #f59e0b; }
+</style>
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+  <h2>{{ month_label }}</h2>
+  <div>
+    <a href="?month={{ prev_month }}">&larr; Prev</a>
+    {% if not is_current %}<a href="{% url 'dashboard' %}" style="margin:0 12px">This month</a>{% endif %}
+    <a href="?month={{ next_month }}" style="margin-left:12px">Next &rarr;</a>
+  </div>
+</div>
+
+{% for b in alerts %}
+<div class="card {% if b.status == 'over' %}budget-alert-over{% else %}budget-alert-warning{% endif %}" style="margin-bottom:12px">
+  {% if b.status == 'over' %}
+    <strong>{{ b.category }}</strong> is over budget: {{ b.spent|floatformat:"0g" }} of {{ b.budget|floatformat:"0g" }} MMK ({{ b.percent }}%).
+  {% else %}
+    <strong>{{ b.category }}</strong> budget is {{ b.percent }}% used: {{ b.spent|floatformat:"0g" }} of {{ b.budget|floatformat:"0g" }} MMK.
+  {% endif %}
+</div>
+{% endfor %}
+
+<div class="grid">
+  <div class="card"><h3>Income</h3><p style="color:#059669">{{ summary.income|floatformat:"0g" }} MMK</p></div>
+  <div class="card"><h3>Expenses</h3><p style="color:#dc2626">{{ summary.expenses|floatformat:"0g" }} MMK</p></div>
+  <div class="card"><h3>Savings</h3><p>{{ summary.savings|floatformat:"0g" }} MMK</p></div>
+  <div class="card"><h3>Savings rate</h3>
+    <p>{% if summary.savings_rate is not None %}{{ summary.savings_rate }}%{% else %}-{% endif %}</p>
+  </div>
+</div>
+
+<div class="grid2">
+  <div class="card"><h3>Spending by category</h3><div id="pie"></div></div>
+  <div class="card"><h3>Last 6 months</h3><div id="trend"></div></div>
+</div>
+
+<div class="grid2">
+  {% if is_current %}
+  <div class="card">
+    <h3>Expected spending this month</h3>
+    {% if forecast and forecast.enough %}
+      <p style="font-size:24px;font-weight:600;margin:0 0 8px">{{ forecast.predicted|floatformat:"0g" }} MMK</p>
+      <small>
+        Spent so far: {{ forecast.spent_so_far|floatformat:"0g" }} MMK<br>
+        Estimated from {{ forecast.months_used }} completed months ({{ forecast.method }}).
+        This is only an estimate, and real spending can differ.
+      </small>
+    {% elif forecast %}
+      <p>Not enough history yet. The forecast needs at least {{ forecast.months_needed }} completed months of expenses (you have {{ forecast.months_have }}).</p>
+    {% else %}
+      <p>No expenses recorded yet.</p>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <div class="card">
+    <h3>Unusual spending</h3>
+    {% for u in unusual %}
+      <div style="margin-bottom:10px">
+        <strong>{{ u.category }}</strong>: {{ u.amount|floatformat:"0g" }} MMK on {{ u.date }}<br>
+        <small>{{ u.times }}x your usual {{ u.typical|floatformat:"0g" }} MMK{% if u.description %} ({{ u.description }}){% endif %}</small>
+      </div>
+    {% empty %}
+      <p>Nothing unusual this month.</p>
+    {% endfor %}
+    <small style="color:#6b7280">Unusual doesn't mean wrong. It just means bigger than what's normal for that category.</small>
+  </div>
+</div>
+
+<div class="card" style="margin-top:16px">
+  <h3>Budgets</h3>
+  {% include 'budgets/_bars.html' %}
+</div>
+
+{{ charts|json_script:"chart-data" }}
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<script>
+  const data = JSON.parse(document.getElementById('chart-data').textContent);
+  const layout = { margin: { t: 10, b: 40, l: 50, r: 10 }, paper_bgcolor: 'rgba(0,0,0,0)' };
+  const config = { responsive: true, displayModeBar: false };
+
+  if (data.categories.length) {
+    Plotly.newPlot('pie', [{
+      type: 'pie', hole: 0.45,
+      labels: data.categories.map(c => c.name),
+      values: data.categories.map(c => c.total),
+    }], layout, config);
+  } else {
+    document.getElementById('pie').innerHTML = '<p>No expenses this month.</p>';
+  }
+
+  Plotly.newPlot('trend', [
+    { type: 'bar', name: 'Income', x: data.trend.labels, y: data.trend.income, marker: { color: '#059669' } },
+    { type: 'bar', name: 'Expenses', x: data.trend.labels, y: data.trend.expenses, marker: { color: '#dc2626' } },
+  ], { ...layout, barmode: 'group', xaxis: { type: 'category' } }, config);
+</script>
+{% endblock %}

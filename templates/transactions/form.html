@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="card" style="max-width:480px;margin:auto">
+  <h2>Add transaction</h2>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <small id="suggest-hint" style="display:block;margin-bottom:12px;color:#6b7280"></small>
+    <button type="submit">Save</button>
+    <a href="{% url 'transaction_list' %}">Cancel</a>
+  </form>
+</div>
+
+<script>
+  const desc = document.getElementById('id_description');
+  const cat = document.getElementById('id_category');
+  const type = document.getElementById('id_type');
+  const hint = document.getElementById('suggest-hint');
+  let userPicked = false;
+  let timer;
+
+  // If the person picks a category themselves, stop overriding it
+  cat.addEventListener('change', () => { userPicked = true; });
+  desc.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(suggest, 400); });
+  type.addEventListener('change', suggest);
+
+  async function suggest() {
+    if (userPicked || desc.value.trim().length < 3) return;
+    const url = `{% url 'category_suggest' %}?type=${encodeURIComponent(type.value)}&description=${encodeURIComponent(desc.value)}`;
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+      if (data.category_id) {
+        cat.value = data.category_id;
+        hint.textContent = `Suggested: ${data.category} (${Math.round(data.confidence * 100)}% sure)`;
+      } else {
+        hint.textContent = '';
+      }
+    } catch (e) { hint.textContent = ''; }
+  }
+</script>
+{% endblock %}

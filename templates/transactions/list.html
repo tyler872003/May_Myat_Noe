@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block content %}
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+  <h2>Transactions</h2>
+  <div>
+    <a href="{% url 'transaction_create' %}"><button>+ Add</button></a>
+    <a href="{% url 'upload_csv' %}"><button>Upload CSV</button></a>
+  </div>
+</div>
+
+<div class="card">
+  {% if page.object_list %}
+  <table style="width:100%;border-collapse:collapse">
+    <tr style="text-align:left;border-bottom:1px solid #e5e7eb">
+      <th>Date</th><th>Type</th><th>Category</th><th>Description</th><th style="text-align:right">Amount (MMK)</th><th></th>
+    </tr>
+    {% for t in page %}
+    <tr style="border-bottom:1px solid #f3f4f6">
+      <td>{{ t.date }}</td>
+      <td>{{ t.get_type_display }}</td>
+      <td>{{ t.category|default:"-" }}</td>
+      <td>{{ t.description }}</td>
+      {% if t.type == 'income' %}
+      <td style="text-align:right;color:#059669">
+      {% else %}
+      <td style="text-align:right;color:#dc2626">
+      {% endif %}
+        {% if t.type == 'income' %}+{% else %}-{% endif %}{{ t.amount|floatformat:0 }}
+      </td>
+      <td>
+        <form method="post" action="{% url 'transaction_delete' t.pk %}" onsubmit="return confirm('Delete this transaction?')">
+          {% csrf_token %}
+          <button type="submit" style="background:#ef4444;padding:4px 10px">Delete</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+
+  <p style="margin-top:16px">
+    {% if page.has_previous %}<a href="?page={{ page.previous_page_number }}">&larr; Previous</a>{% endif %}
+    Page {{ page.number }} of {{ page.paginator.num_pages }}
+    {% if page.has_next %}<a href="?page={{ page.next_page_number }}">Next &rarr;</a>{% endif %}
+  </p>
+  {% else %}
+    <p>No transactions yet. Add one or upload a CSV.</p>
+  {% endif %}
+</div>
+{% endblock %}

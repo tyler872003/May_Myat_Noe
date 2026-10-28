@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Budgets</h2>
+<div class="card" style="max-width:480px;margin-bottom:16px">
+  <h3>Set a monthly budget</h3>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Save</button>
+  </form>
+  <small>Choosing a category that already has a budget will update it.</small>
+</div>
+
+<div class="card">
+  <h3>{{ month_label }}</h3>
+  {% include 'budgets/_bars.html' with show_delete=True %}
+</div>
+{% endblock %}

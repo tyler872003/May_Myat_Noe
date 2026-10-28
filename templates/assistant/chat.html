@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+  #chat-box { height: 380px; overflow-y: auto; padding: 8px; background: #f9fafb; border-radius: 8px; }
+  .msg { max-width: 80%; padding: 10px 14px; margin: 8px 0; border-radius: 12px; white-space: pre-wrap; line-height: 1.5; }
+  .msg.user { margin-left: auto; background: #2563eb; color: #fff; }
+  .msg.assistant { background: #e5e7eb; }
+  .suggest { background: #fff; color: #1f2937; border: 1px solid #d1d5db; margin: 0 6px 6px 0; padding: 6px 12px; }
+</style>
+
+<h2>AI Assistant</h2>
+<div class="card">
+  {% if not ai_enabled %}
+    <p style="color:#6b7280">Free mode: answers are built from your own numbers using built-in rules (no external AI service, no cost). Try questions about your top category, why spending went up, a savings target such as "save 100,000 per month", budgets, the forecast, or unusual spending.</p>
+  {% endif %}
+
+  <div id="chat-box">
+    {% for m in history %}<div class="msg {{ m.role }}">{{ m.content }}</div>{% endfor %}
+  </div>
+
+  <div style="margin:12px 0">
+    <button class="suggest" type="button">ဒီလ ဘယ် Category မှာ ငွေအများဆုံးသုံးထားလဲ?</button>
+    <button class="suggest" type="button">တစ်လကို 100,000 ကျပ် စုချင်ရင် ဘယ်လိုစီမံရမလဲ?</button>
+    <button class="suggest" type="button">ဒီလ အသုံးစရိတ် ဘာကြောင့် တက်လာတာလဲ?</button>
+    <button class="suggest" type="button">Which category did I spend the most on?</button>
+  </div>
+
+  <form id="chat-form" style="display:flex;gap:8px">
+    <input id="question" maxlength="500" placeholder="Ask about your money..." autocomplete="off" style="margin:0">
+    <button id="send" type="submit">Send</button>
+  </form>
+  <p style="margin:12px 0 0">
+    <button id="clear" type="button" class="suggest">Clear chat</button>
+  </p>
+
+  <small style="color:#6b7280">
+    {% if provider == 'gemini' %}
+      To answer, this page sends your question plus totals (monthly, per category, budgets) and the amounts of your five
+      largest expenses, without descriptions, to Google's Gemini API. On Google's free tier, content may be used to improve
+      Google's products, so don't type sensitive details into the chat.
+    {% elif provider == 'claude' %}
+      To answer, this page sends your question plus totals (monthly, per category, budgets) and the amounts of your five
+      largest expenses, without descriptions, to Anthropic's Claude API.
+    {% else %}
+      In free mode your data stays on your own server.
+    {% endif %}
+    Always check important numbers on the dashboard.
+  </small>
+</div>
+
+<script>
+  const box = document.getElementById('chat-box');
+  const input = document.getElementById('question');
+  const sendBtn = document.getElementById('send');
+  box.scrollTop = box.scrollHeight;
+
+  function addMessage(role, text) {
+    const div = document.createElement('div');
+    div.className = 'msg ' + role;
+    div.textContent = text;
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
+    return div;
+  }
+
+  async function send(text) {
+    text = text.trim();
+    if (!text) return;
+    addMessage('user', text);
+    input.value = '';
+    sendBtn.disabled = true;
+    const waiting = addMessage('assistant', 'Thinking...');
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 60000);
+    try {
+      const res = await fetch("{% url 'assistant_ask' %}", {
+        method: 'POST',
+        signal: controller.signal,
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+        body: JSON.stringify({ question: text }),
+      });
+      const data = await res.json();
+      waiting.textContent = data.answer || data.error || 'Something went wrong.';
+    } catch (e) {
+      waiting.textContent = e.name === 'AbortError'
+        ? 'This is taking too long. Please try again.'
+        : 'Something went wrong. Please try again.';
+    } finally {
+      clearTimeout(timer);
+      sendBtn.disabled = false;
+      box.scrollTop = box.scrollHeight;
+      input.focus();
+    }
+  }
+
+  document.getElementById('chat-form').addEventListener('submit', e => { e.preventDefault(); send(input.value); });
+  document.querySelectorAll('.suggest[type=button]').forEach(b => {
+    if (b.id !== 'clear') b.addEventListener('click', () => send(b.textContent));
+  });
+  document.getElementById('clear').addEventListener('click', async () => {
+    await fetch("{% url 'assistant_clear' %}", { method: 'POST', headers: { 'X-CSRFToken': '{{ csrf_token }}' } });
+    box.innerHTML = '';
+  });
+</script>
+{% endblock %}
