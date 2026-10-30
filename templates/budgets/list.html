@@ -1,18 +1,28 @@
 {% extends 'base.html' %}
+{% block title %}Budgets · FinanceAI{% endblock %}
 {% block content %}
-<h2>Budgets</h2>
-<div class="card" style="max-width:480px;margin-bottom:16px">
-  <h3>Set a monthly budget</h3>
-  <form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Save</button>
-  </form>
-  <small>Choosing a category that already has a budget will update it.</small>
+<div class="mb-4">
+  <p class="text-uppercase fw-bold mb-1" style="color:#5b726e;letter-spacing:.08em;font-size:.78rem">Limits</p>
+  <h1 class="h3 mb-0 fw-bold">Budgets</h1>
 </div>
 
-<div class="card">
-  <h3>{{ month_label }}</h3>
-  {% include 'budgets/_bars.html' with show_delete=True %}
+<div class="row g-4">
+  <div class="col-lg-5">
+    <div class="surface p-4">
+      <h2 class="h5 fw-bold">Set a monthly budget</h2>
+      <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-mint">Save</button>
+      </form>
+      <p class="small text-muted mt-3 mb-0">Choosing a category that already has a budget will update it.</p>
+    </div>
+  </div>
+  <div class="col-lg-7">
+    <div class="surface p-4">
+      <h2 class="h5 fw-bold">{{ month_label }}</h2>
+      {% include 'budgets/_bars.html' with show_delete=True %}
+    </div>
+  </div>
 </div>
 {% endblock %}

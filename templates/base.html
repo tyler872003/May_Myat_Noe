@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -5,208 +6,67 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}FinanceAI{% endblock %}</title>
-  <style>
-    body {
-      font-family: system-ui, sans-serif;
-      margin: 0;
-      background: #f4f6f8;
-    }
-
-    nav {
-      background: #1f2937;
-      color: #fff;
-      padding: 14px 24px;
-      display: flex;
-      justify-content: space-between;
-    }
-
-    nav a {
-      color: #fff;
-      margin-left: 16px;
-      text-decoration: none;
-    }
-
-    .container {
-      max-width: 900px;
-      margin: 32px auto;
-      padding: 0 16px;
-    }
-
-    .card {
-      background: #fff;
-      border-radius: 10px;
-      padding: 20px;
-      box-shadow: 0 1px 4px rgba(0, 0, 0, .08);
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 16px;
-    }
-
-    .grid .card h3 {
-      margin: 0 0 8px;
-      font-size: 14px;
-      color: #6b7280;
-    }
-
-    .grid .card p {
-      margin: 0;
-      font-size: 24px;
-      font-weight: 600;
-    }
-
-    .grid2 {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      margin-top: 16px;
-    }
-
-    @media (max-width: 700px) {
-      .grid2 {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .bar {
-      background: #e5e7eb;
-      border-radius: 6px;
-      height: 10px;
-      overflow: hidden;
-    }
-
-    .bar .fill {
-      height: 100%;
-    }
-
-    .ok {
-      background: #10b981;
-    }
-
-    .warning {
-      background: #f59e0b;
-    }
-
-    .over {
-      background: #ef4444;
-    }
-
-    .message {
-      margin-bottom: 12px;
-      border-left: 4px solid #10b981;
-    }
-
-    .message-warning {
-      border-left-color: #f59e0b;
-    }
-
-    .message-error {
-      border-left-color: #ef4444;
-    }
-
-    input,
-    select {
-      display: block;
-      width: 100%;
-      padding: 8px;
-      margin: 6px 0 14px;
-      box-sizing: border-box;
-    }
-
-    button {
-      background: #2563eb;
-      color: #fff;
-      border: 0;
-      padding: 10px 18px;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-
-    th,
-    td {
-      padding: 8px 6px;
-    }
-
-    .auth-card {
-      max-width: 420px;
-      margin: 60px auto;
-      padding: 32px;
-      background: #fff;
-      border-radius: 12px;
-      text-align: center;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, .08);
-    }
-
-    .auth-icon {
-      font-size: 48px;
-      margin-bottom: 8px;
-    }
-
-    .auth-card input {
-      width: 100%;
-      padding: 10px;
-      margin: 12px 0;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      box-sizing: border-box;
-    }
-
-    .btn {
-      display: inline-block;
-      padding: 10px 20px;
-      margin-top: 8px;
-      background: #4f46e5;
-      color: #fff;
-      border: 0;
-      border-radius: 8px;
-      text-decoration: none;
-      cursor: pointer;
-    }
-
-    .muted {
-      color: #666;
-    }
-
-    .small {
-      font-size: 13px;
-    }
-  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
 </head>
 
 <body>
-  <nav>
-    <div>
-      <strong>FinanceAI</strong>
-      {% if user.is_authenticated %}
-      <a href="{% url 'dashboard' %}">Dashboard</a>
-      <a href="{% url 'transaction_list' %}">Transactions</a>
-      <a href="{% url 'budget_list' %}">Budgets</a>
-      <a href="{% url 'assistant_chat' %}">Assistant</a>
-      {% endif %}
-    </div>
-    <div>
-      {% if user.is_authenticated %}
-      <span>{{ user.username }}</span>
-      <form method="post" action="{% url 'logout' %}" style="display:inline">
-        {% csrf_token %}
-        <button type="submit">Logout</button>
-      </form>
-      {% else %}
-      <a href="{% url 'login' %}">Login</a>
-      <a href="{% url 'register' %}">Register</a>
-      {% endif %}
+  <nav class="navbar navbar-expand-md app-navbar sticky-top">
+    <div class="container page-shell">
+      <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" href="{% if user.is_authenticated %}{% url 'dashboard' %}{% else %}{% url 'login' %}{% endif %}">
+        <span class="brand-mark"><i class="bi bi-leaf"></i></span>
+        FinanceAI
+      </a>
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-label="Menu">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="mainNav">
+        {% if user.is_authenticated %}
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3">
+          <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}">Dashboard</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.url_name == 'transaction_list' %}active{% endif %}" href="{% url 'transaction_list' %}">Transactions</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.url_name == 'budget_list' %}active{% endif %}" href="{% url 'budget_list' %}">Budgets</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.url_name == 'assistant_chat' %}active{% endif %}" href="{% url 'assistant_chat' %}">Assistant</a>
+          </li>
+        </ul>
+        <div class="d-flex align-items-center gap-2">
+          <span class="user-chip"><i class="bi bi-person-circle me-1"></i>{{ user.username }}</span>
+          <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-ghost btn-sm">Logout</button>
+          </form>
+        </div>
+        {% else %}
+        <div class="ms-auto d-flex gap-2">
+          <a class="nav-link" href="{% url 'login' %}">Login</a>
+          <a class="btn btn-mint btn-sm" href="{% url 'register' %}">Get started</a>
+        </div>
+        {% endif %}
+      </div>
     </div>
   </nav>
-  <div class="container">
+
+  <main class="container page-shell py-4">
     {% for m in messages %}
-    <div
-      class="card message {% if m.tags == 'warning' %}message-warning{% elif m.tags == 'error' %}message-error{% endif %}">
-      {{ m }}</div>
+    <div class="alert {% if m.tags == 'warning' %}alert-warning{% elif m.tags == 'error' %}alert-danger{% elif m.tags == 'success' %}alert-success{% else %}alert-info{% endif %} shadow-sm mb-3">
+      {{ m }}
+    </div>
     {% endfor %}
     {% block content %}{% endblock %}
-  </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

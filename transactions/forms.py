@@ -1,9 +1,11 @@
 from django import forms
 
+from config.bootstrap_forms import BootstrapFormMixin
+
 from .models import Category, Transaction
 
 
-class TransactionForm(forms.ModelForm):
+class TransactionForm(BootstrapFormMixin, forms.ModelForm):
     class Meta:
         model = Transaction
         fields = ['type', 'amount', 'category', 'description', 'date']
@@ -17,5 +19,5 @@ class TransactionForm(forms.ModelForm):
         self.fields['category'].queryset = Category.objects.filter(user=user)
 
 
-class CSVUploadForm(forms.Form):
+class CSVUploadForm(BootstrapFormMixin, forms.Form):
     file = forms.FileField(label='CSV file')

@@ -1,14 +1,17 @@
 {% extends "base.html" %}
+{% block title %}Check your email · FinanceAI{% endblock %}
 {% block content %}
-<div class="auth-card">
-  <div class="auth-icon">✉️</div>
-  <h2>Check your email</h2>
-  <p>We sent a verification link to <strong>{{ email }}</strong>.</p>
-  <p class="muted">Click the link in the email to activate your account.</p>
-  <a class="btn" href="{% url 'login' %}">Back to login</a>
-  <p class="muted small">
-    Didn't get it? <a href="{% url 'resend_verification' %}">Resend email</a>
-  </p>
+<div class="auth-wrap justify-content-center">
+  <div class="surface p-4 p-md-5 auth-panel text-center">
+    <div class="display-5 mb-2">✉️</div>
+    <h1 class="h3 fw-bold">Check your email</h1>
+    <p>We sent a verification link to <strong>{{ email }}</strong>.</p>
+    <p class="text-muted">Click the link in the email to activate your account.</p>
+    <a class="btn btn-mint" href="{% url 'login' %}">Back to login</a>
+    <p class="text-muted small mt-3 mb-0">
+      Didn't get it? <a href="{% url 'resend_verification' %}">Resend email</a>
+    </p>
+  </div>
 </div>
 <script>
   const timer = setInterval(async () => {

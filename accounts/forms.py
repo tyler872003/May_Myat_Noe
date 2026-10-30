@@ -1,10 +1,17 @@
 from django import forms
 from django.contrib.auth import get_user_model
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+
+from config.bootstrap_forms import BootstrapFormMixin
 
 User = get_user_model()
 
-class RegisterForm(UserCreationForm):
+
+class LoginForm(BootstrapFormMixin, AuthenticationForm):
+    pass
+
+
+class RegisterForm(BootstrapFormMixin, UserCreationForm):
     email = forms.EmailField(required=True)
 
     class Meta:

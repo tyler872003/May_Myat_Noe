@@ -2,10 +2,11 @@ from decimal import Decimal
 
 from django import forms
 
+from config.bootstrap_forms import BootstrapFormMixin
 from transactions.models import Category
 
 
-class BudgetForm(forms.Form):
+class BudgetForm(BootstrapFormMixin, forms.Form):
     category = forms.ModelChoiceField(queryset=Category.objects.none())
     amount = forms.DecimalField(max_digits=12, decimal_places=2, min_value=Decimal('1'),
                                 label='Monthly limit (MMK)')

@@ -1,20 +1,20 @@
 {% extends 'base.html' %}
+{% block title %}Dashboard · FinanceAI{% endblock %}
 {% block content %}
-<style>
-  .budget-alert-over { border-left: 4px solid #ef4444; }
-  .budget-alert-warning { border-left: 4px solid #f59e0b; }
-</style>
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-  <h2>{{ month_label }}</h2>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
   <div>
-    <a href="?month={{ prev_month }}">&larr; Prev</a>
-    {% if not is_current %}<a href="{% url 'dashboard' %}" style="margin:0 12px">This month</a>{% endif %}
-    <a href="?month={{ next_month }}" style="margin-left:12px">Next &rarr;</a>
+    <p class="text-uppercase fw-bold mb-1" style="color:#5b726e;letter-spacing:.08em;font-size:.78rem">Overview</p>
+    <h1 class="h3 mb-0 fw-bold">{{ month_label }}</h1>
+  </div>
+  <div class="month-nav surface px-3 py-2 d-flex align-items-center gap-3">
+    <a href="?month={{ prev_month }}"><i class="bi bi-chevron-left"></i> Prev</a>
+    {% if not is_current %}<a href="{% url 'dashboard' %}">This month</a>{% endif %}
+    <a href="?month={{ next_month }}">Next <i class="bi bi-chevron-right"></i></a>
   </div>
 </div>
 
 {% for b in alerts %}
-<div class="card {% if b.status == 'over' %}budget-alert-over{% else %}budget-alert-warning{% endif %}" style="margin-bottom:12px">
+<div class="alert {% if b.status == 'over' %}alert-danger{% else %}alert-warning{% endif %}">
   {% if b.status == 'over' %}
     <strong>{{ b.category }}</strong> is over budget: {{ b.spent|floatformat:"0g" }} of {{ b.budget|floatformat:"0g" }} MMK ({{ b.percent }}%).
   {% else %}
@@ -23,55 +23,87 @@
 </div>
 {% endfor %}
 
-<div class="grid">
-  <div class="card"><h3>Income</h3><p style="color:#059669">{{ summary.income|floatformat:"0g" }} MMK</p></div>
-  <div class="card"><h3>Expenses</h3><p style="color:#dc2626">{{ summary.expenses|floatformat:"0g" }} MMK</p></div>
-  <div class="card"><h3>Savings</h3><p>{{ summary.savings|floatformat:"0g" }} MMK</p></div>
-  <div class="card"><h3>Savings rate</h3>
-    <p>{% if summary.savings_rate is not None %}{{ summary.savings_rate }}%{% else %}-{% endif %}</p>
+<div class="row g-3 mb-4">
+  <div class="col-md-6 col-xl-3">
+    <div class="surface stat-card p-4 h-100">
+      <div class="stat-label">Income</div>
+      <p class="stat-value income">{{ summary.income|floatformat:"0g" }} <span class="fs-6 fw-semibold">MMK</span></p>
+    </div>
+  </div>
+  <div class="col-md-6 col-xl-3">
+    <div class="surface stat-card p-4 h-100">
+      <div class="stat-label">Expenses</div>
+      <p class="stat-value expense">{{ summary.expenses|floatformat:"0g" }} <span class="fs-6 fw-semibold">MMK</span></p>
+    </div>
+  </div>
+  <div class="col-md-6 col-xl-3">
+    <div class="surface stat-card p-4 h-100">
+      <div class="stat-label">Savings</div>
+      <p class="stat-value">{{ summary.savings|floatformat:"0g" }} <span class="fs-6 fw-semibold">MMK</span></p>
+    </div>
+  </div>
+  <div class="col-md-6 col-xl-3">
+    <div class="surface stat-card p-4 h-100">
+      <div class="stat-label">Savings rate</div>
+      <p class="stat-value">{% if summary.savings_rate is not None %}{{ summary.savings_rate }}%{% else %}-{% endif %}</p>
+    </div>
   </div>
 </div>
 
-<div class="grid2">
-  <div class="card"><h3>Spending by category</h3><div id="pie"></div></div>
-  <div class="card"><h3>Last 6 months</h3><div id="trend"></div></div>
+<div class="row g-3 mb-4">
+  <div class="col-lg-6">
+    <div class="surface p-4 h-100">
+      <h2 class="h5 fw-bold">Spending by category</h2>
+      <div id="pie"></div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="surface p-4 h-100">
+      <h2 class="h5 fw-bold">Last 6 months</h2>
+      <div id="trend"></div>
+    </div>
+  </div>
 </div>
 
-<div class="grid2">
+<div class="row g-3 mb-4">
   {% if is_current %}
-  <div class="card">
-    <h3>Expected spending this month</h3>
-    {% if forecast and forecast.enough %}
-      <p style="font-size:24px;font-weight:600;margin:0 0 8px">{{ forecast.predicted|floatformat:"0g" }} MMK</p>
-      <small>
-        Spent so far: {{ forecast.spent_so_far|floatformat:"0g" }} MMK<br>
-        Estimated from {{ forecast.months_used }} completed months ({{ forecast.method }}).
-        This is only an estimate, and real spending can differ.
-      </small>
-    {% elif forecast %}
-      <p>Not enough history yet. The forecast needs at least {{ forecast.months_needed }} completed months of expenses (you have {{ forecast.months_have }}).</p>
-    {% else %}
-      <p>No expenses recorded yet.</p>
-    {% endif %}
+  <div class="col-lg-6">
+    <div class="surface p-4 h-100">
+      <h2 class="h5 fw-bold">Expected spending this month</h2>
+      {% if forecast and forecast.enough %}
+        <p class="stat-value mb-2">{{ forecast.predicted|floatformat:"0g" }} <span class="fs-6">MMK</span></p>
+        <p class="text-muted mb-0 small">
+          Spent so far: {{ forecast.spent_so_far|floatformat:"0g" }} MMK<br>
+          Estimated from {{ forecast.months_used }} completed months ({{ forecast.method }}).
+          This is only an estimate, and real spending can differ.
+        </p>
+      {% elif forecast %}
+        <p class="mb-0">Not enough history yet. The forecast needs at least {{ forecast.months_needed }} completed months of expenses (you have {{ forecast.months_have }}).</p>
+      {% else %}
+        <p class="mb-0">No expenses recorded yet.</p>
+      {% endif %}
+    </div>
   </div>
   {% endif %}
 
-  <div class="card">
-    <h3>Unusual spending</h3>
-    {% for u in unusual %}
-      <div style="margin-bottom:10px">
-        <strong>{{ u.category }}</strong>: {{ u.amount|floatformat:"0g" }} MMK on {{ u.date }}<br>
-        <small>{{ u.times }}x your usual {{ u.typical|floatformat:"0g" }} MMK{% if u.description %} ({{ u.description }}){% endif %}</small>
-      </div>
-    {% empty %}
-      <p>Nothing unusual this month.</p>
-    {% endfor %}
-    <small style="color:#6b7280">Unusual doesn't mean wrong. It just means bigger than what's normal for that category.</small>
+  <div class="col-lg-6">
+    <div class="surface p-4 h-100">
+      <h2 class="h5 fw-bold">Unusual spending</h2>
+      {% for u in unusual %}
+        <div class="mb-3">
+          <strong>{{ u.category }}</strong>: {{ u.amount|floatformat:"0g" }} MMK on {{ u.date }}<br>
+          <small class="text-muted">{{ u.times }}x your usual {{ u.typical|floatformat:"0g" }} MMK{% if u.description %} ({{ u.description }}){% endif %}</small>
+        </div>
+      {% empty %}
+        <p>Nothing unusual this month.</p>
+      {% endfor %}
+      <small class="text-muted">Unusual doesn't mean wrong. It just means bigger than what's normal for that category.</small>
+    </div>
   </div>
 </div>
 
-<div class="card" style="margin-top:16px">
-  <h3>Budgets</h3>
+<div class="surface p-4">
+  <h2 class="h5 fw-bold">Budgets</h2>
   {% include 'budgets/_bars.html' %}
 </div>
 
@@ -79,22 +111,28 @@
 <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
 <script>
   const data = JSON.parse(document.getElementById('chart-data').textContent);
-  const layout = { margin: { t: 10, b: 40, l: 50, r: 10 }, paper_bgcolor: 'rgba(0,0,0,0)' };
+  const layout = {
+    margin: { t: 10, b: 40, l: 50, r: 10 },
+    paper_bgcolor: 'rgba(0,0,0,0)',
+    plot_bgcolor: 'rgba(0,0,0,0)',
+    font: { family: 'Plus Jakarta Sans, sans-serif', color: '#16332f' }
+  };
   const config = { responsive: true, displayModeBar: false };
 
   if (data.categories.length) {
     Plotly.newPlot('pie', [{
-      type: 'pie', hole: 0.45,
+      type: 'pie', hole: 0.55,
       labels: data.categories.map(c => c.name),
       values: data.categories.map(c => c.total),
+      marker: { colors: ['#0f9d8e', '#38bdf8', '#fb7185', '#f59e0b', '#818cf8', '#34d399', '#f472b6'] }
     }], layout, config);
   } else {
-    document.getElementById('pie').innerHTML = '<p>No expenses this month.</p>';
+    document.getElementById('pie').innerHTML = '<p class="text-muted mb-0">No expenses this month.</p>';
   }
 
   Plotly.newPlot('trend', [
-    { type: 'bar', name: 'Income', x: data.trend.labels, y: data.trend.income, marker: { color: '#059669' } },
-    { type: 'bar', name: 'Expenses', x: data.trend.labels, y: data.trend.expenses, marker: { color: '#dc2626' } },
+    { type: 'bar', name: 'Income', x: data.trend.labels, y: data.trend.income, marker: { color: '#0f9d8e' } },
+    { type: 'bar', name: 'Expenses', x: data.trend.labels, y: data.trend.expenses, marker: { color: '#fb7185' } },
   ], { ...layout, barmode: 'group', xaxis: { type: 'category' } }, config);
 </script>
 {% endblock %}

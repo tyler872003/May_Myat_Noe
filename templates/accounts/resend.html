@@ -1,12 +1,16 @@
 {% extends "base.html" %}
+{% block title %}Resend verification · FinanceAI{% endblock %}
 {% block content %}
-<div class="auth-card">
-  <h2>Resend verification email</h2>
-  <form method="post">
-    {% csrf_token %}
-    <input type="email" name="email" placeholder="Your email" required>
-    <button type="submit" class="btn">Send link</button>
-  </form>
-  <p class="muted small"><a href="{% url 'login' %}">Back to login</a></p>
+<div class="auth-wrap justify-content-center">
+  <div class="surface p-4 p-md-5 auth-panel text-center">
+    <h1 class="h3 fw-bold">Resend verification email</h1>
+    <form method="post" class="text-start mt-4">
+      {% csrf_token %}
+      <label class="form-label" for="email">Your email</label>
+      <input class="form-control mb-3" type="email" id="email" name="email" placeholder="you@example.com" required>
+      <button type="submit" class="btn btn-mint w-100">Send link</button>
+    </form>
+    <p class="text-muted small mt-3 mb-0"><a href="{% url 'login' %}">Back to login</a></p>
+  </div>
 </div>
 {% endblock %}

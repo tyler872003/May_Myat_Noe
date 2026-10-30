@@ -1,13 +1,16 @@
 {% extends 'base.html' %}
+{% block title %}Add transaction · FinanceAI{% endblock %}
 {% block content %}
-<div class="card" style="max-width:480px;margin:auto">
-  <h2>Add transaction</h2>
+<div class="surface p-4 p-md-5 mx-auto" style="max-width:520px">
+  <h1 class="h3 fw-bold mb-3">Add transaction</h1>
   <form method="post">
     {% csrf_token %}
     {{ form.as_p }}
-    <small id="suggest-hint" style="display:block;margin-bottom:12px;color:#6b7280"></small>
-    <button type="submit">Save</button>
-    <a href="{% url 'transaction_list' %}">Cancel</a>
+    <small id="suggest-hint" class="d-block mb-3 text-muted"></small>
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn btn-mint">Save</button>
+      <a class="btn btn-ghost" href="{% url 'transaction_list' %}">Cancel</a>
+    </div>
   </form>
 </div>
 
@@ -19,7 +22,6 @@
   let userPicked = false;
   let timer;
 
-  // If the person picks a category themselves, stop overriding it
   cat.addEventListener('change', () => { userPicked = true; });
   desc.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(suggest, 400); });
   type.addEventListener('change', suggest);
