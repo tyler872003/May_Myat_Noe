@@ -11,57 +11,18 @@ from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
-from .otp import check_otp, resend_wait_seconds, send_otp
 
 from .forms import RegisterForm
-from .tokens import email_token
 
 User = get_user_model()
 
-def send_verification_email(request, user):
-    uid = urlsafe_base64_encode(force_bytes(user.pk))
-    token = email_token.make_token(user)
-    link = request.build_absolute_uri(
-        reverse("verify_email", kwargs={"uidb64": uid, "token": token})
-    )
-    send_mail(
-        subject="Verify your email - AI Finance",
-        message=f"Hi {user.username},\n\nClick the link to verify your account:\n{link}\n\nIf you didn't sign up, ignore this email.",
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[user.email],
-    )
+import time
 
+from django.contrib.auth.forms import SetPasswordForm
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
 
-def check_verified(request):
-    email = request.GET.get("email", "")
-    verified = User.objects.filter(email__iexact=email, is_active=True).exists()
-    return JsonResponse({"verified": verified})
-
-def verify_email(request, uidb64, token):
-    try:
-        user = User.objects.get(pk=force_str(urlsafe_base64_decode(uidb64)))
-    except (User.DoesNotExist, ValueError, TypeError, OverflowError):
-        user = None
-
-    if user and email_token.check_token(user, token):
-        user.is_active = True
-        user.save()
-        return render(request, "accounts/email_verified.html")   # no redirect
-
-    return render(request, "accounts/verification_failed.html")
-
-
-def resend_verification(request):
-    if request.method == "POST":
-        email = request.POST.get("email", "").strip()
-        user = User.objects.filter(email__iexact=email, is_active=False).first()
-        if user:
-            send_verification_email(request, user)
-        messages.info(request, "If that account needs verification, a new email has been sent.")
-        return redirect("login")
-    return render(request, "accounts/resend.html")
-
-
+from .otp import RESEND_SECONDS, check_otp, resend_wait_seconds, send_otp
 
 def mask_email(email):
     name, _, domain = email.partition("@")
@@ -120,3 +81,108 @@ def resend_otp(request):
         send_otp(user)
         messages.info(request, "A new code has been sent.")
     return redirect("verify_otp")
+
+RESET_WINDOW_SECONDS = 600  # time allowed to choose a new password after the code
+
+
+def get_reset_user(request):
+    email = request.session.get("reset_email")
+    if not email:
+        return None
+    return User.objects.filter(email__iexact=email, is_active=True).first()
+
+
+def reset_wait_seconds(request):
+    sent = request.session.get("reset_sent_at")
+    if not sent:
+        return 0
+    return max(0, int(RESEND_SECONDS - (time.time() - sent)))
+
+
+def forgot_password(request):
+    if request.method == "POST":
+        email = request.POST.get("email", "").strip().lower()
+        try:
+            validate_email(email)
+        except ValidationError:
+            messages.error(request, "Please enter a valid email address.")
+            return render(request, "accounts/forgot_password.html")
+
+        request.session["reset_email"] = email
+        request.session.pop("reset_user_id", None)
+
+        user = get_reset_user(request)
+        if user and resend_wait_seconds(user, "reset") == 0:
+            send_otp(user, "reset")
+        request.session["reset_sent_at"] = time.time()
+        return redirect("reset_verify")   # same result whether or not the email exists
+
+    return render(request, "accounts/forgot_password.html")
+
+
+def reset_verify(request):
+    email = request.session.get("reset_email")
+    if not email:
+        return redirect("forgot_password")
+
+    error = ""
+    if request.method == "POST":
+        code = request.POST.get("code", "").strip()
+        user = get_reset_user(request)
+        if user:
+            ok, error = check_otp(user, code, "reset")
+        else:
+            ok, error = False, "Incorrect code. Please try again."
+
+        if ok:
+            request.session["reset_user_id"] = user.pk
+            request.session["reset_verified_at"] = time.time()
+            request.session.pop("reset_email", None)
+            return redirect("reset_new_password")
+
+    return render(request, "accounts/reset_verify.html", {
+        "email": mask_email(email),
+        "error": error,
+        "wait": reset_wait_seconds(request),
+    })
+
+
+def reset_resend(request):
+    if request.method != "POST":
+        return redirect("reset_verify")
+    if not request.session.get("reset_email"):
+        return redirect("forgot_password")
+
+    wait = reset_wait_seconds(request)
+    if wait:
+        messages.error(request, f"Please wait {wait} seconds before requesting a new code.")
+    else:
+        user = get_reset_user(request)
+        if user and resend_wait_seconds(user, "reset") == 0:
+            send_otp(user, "reset")
+        request.session["reset_sent_at"] = time.time()
+        messages.info(request, "If that email belongs to a verified account, a new code has been sent.")
+    return redirect("reset_verify")
+
+
+def reset_new_password(request):
+    user_id = request.session.get("reset_user_id")
+    verified_at = request.session.get("reset_verified_at", 0)
+    user = User.objects.filter(pk=user_id, is_active=True).first() if user_id else None
+
+    if not user or time.time() - verified_at > RESET_WINDOW_SECONDS:
+        messages.error(request, "Your reset session expired. Please start again.")
+        return redirect("forgot_password")
+
+    if request.method == "POST":
+        form = SetPasswordForm(user, request.POST)
+        if form.is_valid():
+            form.save()
+            for key in ("reset_user_id", "reset_verified_at", "reset_email", "reset_sent_at"):
+                request.session.pop(key, None)
+            messages.success(request, "Password changed. You can now log in.")
+            return redirect("login")
+    else:
+        form = SetPasswordForm(user)
+
+    return render(request, "accounts/reset_new_password.html", {"form": form})
