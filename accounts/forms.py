@@ -8,7 +8,10 @@ User = get_user_model()
 
 
 class LoginForm(BootstrapFormMixin, AuthenticationForm):
-    pass
+    username = forms.CharField(
+        label="Username or email",
+        widget=forms.TextInput(attrs={"autofocus": True, "placeholder": "Username or email"}),
+    )
 
 
 class RegisterForm(BootstrapFormMixin, UserCreationForm):
@@ -18,8 +21,14 @@ class RegisterForm(BootstrapFormMixin, UserCreationForm):
         model = User
         fields = ("username", "email", "password1", "password2")
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.help_text = ""
+        self.fields["email"].widget.attrs["placeholder"] = "Email"
+
     def clean_email(self):
-        email = self.cleaned_data["email"].lower()
+        email = self.cleaned_data["email"].strip().lower()
         if User.objects.filter(email__iexact=email).exists():
             raise forms.ValidationError("This email is already registered.")
         return email

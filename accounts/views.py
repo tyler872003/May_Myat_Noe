@@ -11,6 +11,7 @@ from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from .otp import check_otp, resend_wait_seconds, send_otp
 
 from .forms import RegisterForm
 from .tokens import email_token
@@ -30,19 +31,6 @@ def send_verification_email(request, user):
         recipient_list=[user.email],
     )
 
-
-def register(request):
-    if request.method == "POST":
-        form = RegisterForm(request.POST)
-        if form.is_valid():
-            user = form.save(commit=False)
-            user.is_active = False
-            user.save()
-            send_verification_email(request, user)
-            return render(request, "accounts/check_email.html", {"email": user.email})
-    else:
-        form = RegisterForm()
-    return render(request, "accounts/register.html", {"form": form})
 
 def check_verified(request):
     email = request.GET.get("email", "")
@@ -73,3 +61,62 @@ def resend_verification(request):
         return redirect("login")
     return render(request, "accounts/resend.html")
 
+
+
+def mask_email(email):
+    name, _, domain = email.partition("@")
+    return f"{name[:2]}***@{domain}"
+
+
+def register(request):
+    if request.method == "POST":
+        form = RegisterForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)
+            user.is_active = False
+            user.save()
+            send_otp(user)
+            request.session["pending_user_id"] = user.pk
+            return redirect("verify_otp")
+    else:
+        form = RegisterForm()
+    return render(request, "accounts/register.html", {"form": form})
+
+
+def verify_otp(request):
+    user_id = request.session.get("pending_user_id")
+    user = User.objects.filter(pk=user_id, is_active=False).first() if user_id else None
+    if not user:
+        return redirect("login")
+
+    error = ""
+    if request.method == "POST":
+        code = request.POST.get("code", "").strip()
+        ok, error = check_otp(user, code)
+        if ok:
+            request.session.pop("pending_user_id", None)
+            messages.success(request, "Email verified! You can now log in.")
+            return redirect("login")
+
+    return render(request, "accounts/verify_otp.html", {
+        "email": mask_email(user.email),
+        "error": error,
+        "wait": resend_wait_seconds(user),
+    })
+
+
+def resend_otp(request):
+    if request.method != "POST":
+        return redirect("verify_otp")
+    user_id = request.session.get("pending_user_id")
+    user = User.objects.filter(pk=user_id, is_active=False).first() if user_id else None
+    if not user:
+        return redirect("login")
+
+    wait = resend_wait_seconds(user)
+    if wait:
+        messages.error(request, f"Please wait {wait} seconds before requesting a new code.")
+    else:
+        send_otp(user)
+        messages.info(request, "A new code has been sent.")
+    return redirect("verify_otp")

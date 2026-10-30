@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Verify email · FinanceAI{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6 col-lg-5">
+    <div class="card shadow-sm border-0">
+      <div class="card-body p-4 text-center">
+        <div class="display-5 mb-2"><i class="bi bi-shield-lock"></i></div>
+        <h2 class="h4 fw-bold">Verify your email</h2>
+        <p class="text-muted">We sent a 6-digit code to <strong>{{ email }}</strong>.</p>
+
+        {% if error %}
+        <div class="alert alert-danger py-2">{{ error }}</div>
+        {% endif %}
+
+        <form method="post" class="mb-3">
+          {% csrf_token %}
+          <input type="text" name="code"
+                 class="form-control form-control-lg text-center fw-semibold mb-3"
+                 style="letter-spacing: 0.6rem; font-size: 1.75rem;"
+                 inputmode="numeric" pattern="[0-9]{6}" maxlength="6"
+                 autocomplete="one-time-code" placeholder="000000"
+                 required autofocus>
+          <button type="submit" class="btn btn-mint w-100">Verify</button>
+        </form>
+
+        <form method="post" action="{% url 'resend_otp' %}">
+          {% csrf_token %}
+          <span class="text-muted small">Didn't get it?</span>
+          <button type="submit" class="btn btn-link btn-sm p-0 align-baseline"
+                  {% if wait %}disabled{% endif %}>
+            {% if wait %}Resend available in {{ wait }}s{% else %}Resend code{% endif %}
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

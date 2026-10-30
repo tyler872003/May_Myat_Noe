@@ -10,8 +10,39 @@
       {% csrf_token %}
       {{ form.as_p }}
       <button type="submit" class="btn btn-mint w-100">Register</button>
+      {% if form.errors %}
+      <div class="alert-box" role="alert">
+        <strong>Please fix the following:</strong>
+        <ul>
+          {% for error in form.non_field_errors %}
+          <li>{{ error }}</li>
+          {% endfor %}
+          {% for field in form %}
+          {% for error in field.errors %}
+          <li><b>{{ field.label }}:</b> {{ error }}</li>
+          {% endfor %}
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
     </form>
     <p class="mt-4 mb-0">Already have an account? <a href="{% url 'login' %}">Login</a></p>
   </div>
 </div>
+<style>
+  .alert-box {
+    background: #fff1f2;
+    border: 1px solid #fecdd3;
+    color: #be123c;
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    font-size: 0.95rem;
+  }
+
+  .alert-box ul {
+    margin: 6px 0 0 18px;
+    padding: 0;
+  }
+</style>
 {% endblock %}

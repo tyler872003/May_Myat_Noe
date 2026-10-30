@@ -180,3 +180,8 @@ else:
     }
 
 DEFAULT_FROM_EMAIL = f"AI Finance <{EMAIL_USER or 'noreply@financeai.local'}>"
+
+AUTHENTICATION_BACKENDS = [
+    "accounts.backends.EmailOrUsernameBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
