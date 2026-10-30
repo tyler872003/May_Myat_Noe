@@ -47,7 +47,11 @@ SECRET_KEY = 'django-insecure-plc@3ahb9iq5w*kv3yn4vhl1@nv*@1*-yez+!ke!z(o@$6a=xt
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1",
+    ".vercel.app",
+]
 
 
 # Application definition
@@ -147,7 +151,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.1/howto/static-files/
 
 STATIC_URL = 'static/'
-
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'dashboard'
@@ -184,4 +188,8 @@ DEFAULT_FROM_EMAIL = f"AI Finance <{EMAIL_USER or 'noreply@financeai.local'}>"
 AUTHENTICATION_BACKENDS = [
     "accounts.backends.EmailOrUsernameBackend",
     "django.contrib.auth.backends.ModelBackend",
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://*.vercel.app",
 ]
