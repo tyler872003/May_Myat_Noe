@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="auth-card">
+  <h2>Resend verification email</h2>
+  <form method="post">
+    {% csrf_token %}
+    <input type="email" name="email" placeholder="Your email" required>
+    <button type="submit" class="btn">Send link</button>
+  </form>
+  <p class="muted small"><a href="{% url 'login' %}">Back to login</a></p>
+</div>
+{% endblock %}

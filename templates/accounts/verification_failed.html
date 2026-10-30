@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="auth-card">
+  <div class="auth-icon">⚠️</div>
+  <h2>Link invalid or expired</h2>
+  <p class="muted">This verification link can't be used anymore.</p>
+  <a class="btn" href="{% url 'resend_verification' %}">Get a new link</a>
+</div>
+{% endblock %}

@@ -155,11 +155,28 @@ LOGOUT_REDIRECT_URL = 'login'
 
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 
-# Email
-# https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
+import os
 
-MAILERS = {
-    'default': {
-        'BACKEND': 'django.core.mail.backends.console.EmailBackend',
-    },
-}
+EMAIL_USER = os.environ.get("EMAIL_USER", "")
+EMAIL_APP_PASSWORD = os.environ.get("EMAIL_APP_PASSWORD", "")
+
+if EMAIL_USER and EMAIL_APP_PASSWORD:
+    MAILERS = {
+        "default": {
+            "BACKEND": "django.core.mail.backends.smtp.EmailBackend",
+            "OPTIONS": {
+                "host": "smtp.gmail.com",
+                "use_tls": True,        # port defaults to 587
+                "username": EMAIL_USER,
+                "password": EMAIL_APP_PASSWORD,
+            },
+        },
+    }
+else:
+    MAILERS = {
+        "default": {
+            "BACKEND": "django.core.mail.backends.console.EmailBackend",
+        },
+    }
+
+DEFAULT_FROM_EMAIL = f"AI Finance <{EMAIL_USER or 'noreply@financeai.local'}>"

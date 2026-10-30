@@ -1,4 +1,9 @@
 {% extends 'base.html' %}
+{% if messages %}
+  {% for message in messages %}
+    <div class="alert {{ message.tags }}">{{ message }}</div>
+  {% endfor %}
+{% endif %}
 {% block content %}
 <div class="card" style="max-width:420px;margin:auto">
   <h2>Login</h2>
@@ -8,5 +13,6 @@
     <button type="submit">Login</button>
   </form>
   <p>No account? <a href="{% url 'register' %}">Register</a></p>
+  <p>Didn't verify yet? <a href="{% url 'resend_verification' %}">Resend verification email</a></p>
 </div>
 {% endblock %}

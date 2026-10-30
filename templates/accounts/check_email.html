@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="auth-card">
+  <div class="auth-icon">✉️</div>
+  <h2>Check your email</h2>
+  <p>We sent a verification link to <strong>{{ email }}</strong>.</p>
+  <p class="muted">Click the link in the email to activate your account.</p>
+  <a class="btn" href="{% url 'login' %}">Back to login</a>
+  <p class="muted small">
+    Didn't get it? <a href="{% url 'resend_verification' %}">Resend email</a>
+  </p>
+</div>
+<script>
+  const timer = setInterval(async () => {
+    const r = await fetch("{% url 'check_verified' %}?email={{ email|urlencode }}");
+    const data = await r.json();
+    if (data.verified) {
+      clearInterval(timer);
+      window.location.href = "{% url 'login' %}";
+    }
+  }, 3000);
+</script>
+{% endblock %}

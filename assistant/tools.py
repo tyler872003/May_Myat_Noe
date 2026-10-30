@@ -43,8 +43,9 @@ def make_tools(user, today):
             return [{'error': 'month must be YYYY-MM'}]
         rows = (Transaction.objects
                 .filter(user=user, type=kind, date__gte=start, date__lt=end)
-                .values('category').annotate(total=Sum('amount')).order_by('-total'))
-        return [{'category': str(r['category']), 'total': _num(r['total'])} for r in rows]
+                .values('category__name').annotate(total=Sum('amount')).order_by('-total'))
+        return [{'category': r['category__name'] or 'Uncategorized', 'total': _num(r['total'])}
+                for r in rows]
 
     def get_recent_months(count: int = 6) -> list:
         """Income, expense and net saving for each of the last N months (max 12), oldest first. Use for trends, averages and 'why did spending go up'."""
@@ -69,15 +70,17 @@ def make_tools(user, today):
         except Exception:
             return [{'error': 'month must be YYYY-MM'}]
         qs = (Transaction.objects.filter(user=user, type='expense', date__gte=start, date__lt=end)
-              .order_by('-amount')[:max(1, min(limit, 10))])
-        return [{'date': t.date.isoformat(), 'category': str(t.category), 'amount': _num(t.amount)} for t in qs]
+            .select_related('category').order_by('-amount')[:max(1, min(limit, 10))])
+        return [{'date': t.date.isoformat(),
+                'category': t.category.name if t.category else 'Uncategorized',
+                'amount': _num(t.amount)} for t in qs]
 
     def savings_plan(target_amount: int, months: int) -> dict:
         """Check a savings goal. Example: 10,000,000 in 12 months. Returns the required saving per month
         and compares it with the user's average monthly net saving over recent months."""
         months = max(1, months)
         required = round(target_amount / months)
-        recent = get_recent_months(3)
+        recent = get_recent_months(4)[:-1] or get_recent_months(4)
         avg = round(sum(r['net_saving'] for r in recent) / len(recent)) if recent else 0
         return {'target': target_amount, 'months': months, 'required_per_month': required,
                 'average_monthly_net_saving_recent': avg, 'gap_per_month': required - avg}
