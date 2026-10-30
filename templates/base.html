@@ -17,7 +17,7 @@
 <body>
   <nav class="navbar navbar-expand-md app-navbar sticky-top">
     <div class="container page-shell">
-      <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" href="{% if user.is_authenticated %}{% url 'dashboard' %}{% else %}{% url 'login' %}{% endif %}">
+      <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" href="{% if user.is_authenticated %}{% url 'dashboard' %}{% else %}{% url 'welcome' %}{% endif %}">
         <span class="brand-mark"><i class="bi bi-leaf"></i></span>
         FinanceAI
       </a>

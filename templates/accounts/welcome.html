@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block title %}Welcome · FinanceAI{% endblock %}
+{% block content %}
+<section class="landing">
+  <div class="landing-hero surface p-4 p-md-5 mb-4">
+    <p class="landing-kicker mb-2">Personal finance, made lighter</p>
+    <h1 class="display-5 fw-bold mb-3">See where your money goes — then keep more of it.</h1>
+    <p class="lead text-muted mb-4">
+      FinanceAI tracks income, spending, and budgets, then helps you plan with an assistant that already knows your numbers.
+    </p>
+    <div class="d-flex flex-wrap gap-2">
+      <a class="btn btn-mint btn-lg" href="{% url 'register' %}">Get started free</a>
+      <a class="btn btn-ghost btn-lg" href="{% url 'login' %}">Log in</a>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-md-6 col-xl-3">
+      <div class="surface p-4 h-100 landing-card">
+        <div class="brand-mark mb-3"><i class="bi bi-receipt"></i></div>
+        <h2 class="h5 fw-bold">Transactions</h2>
+        <p class="text-muted mb-0">Log spending, import CSVs, and keep every category in one place.</p>
+      </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+      <div class="surface p-4 h-100 landing-card">
+        <div class="brand-mark mb-3"><i class="bi bi-pie-chart"></i></div>
+        <h2 class="h5 fw-bold">Budgets</h2>
+        <p class="text-muted mb-0">Set monthly limits and see progress before you overspend.</p>
+      </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+      <div class="surface p-4 h-100 landing-card">
+        <div class="brand-mark mb-3"><i class="bi bi-graph-up-arrow"></i></div>
+        <h2 class="h5 fw-bold">Insights</h2>
+        <p class="text-muted mb-0">Spot unusual charges and forecast the rest of the month.</p>
+      </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+      <div class="surface p-4 h-100 landing-card">
+        <div class="brand-mark mb-3"><i class="bi bi-stars"></i></div>
+        <h2 class="h5 fw-bold">AI assistant</h2>
+        <p class="text-muted mb-0">Ask about your spending in plain language and get a clear answer.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="surface p-4 p-md-5 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+    <div>
+      <h2 class="h4 fw-bold mb-1">Ready to take control?</h2>
+      <p class="text-muted mb-0">Create an account in a minute. Your dashboard is waiting.</p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+      <a class="btn btn-mint" href="{% url 'register' %}">Create account</a>
+      <a class="btn btn-ghost" href="{% url 'login' %}">I already have an account</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -263,3 +263,22 @@ pre {
   font-weight: 700;
   font-size: 0.88rem;
 }
+
+.landing-kicker {
+  color: var(--mint-deep);
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.landing-hero {
+  background:
+    linear-gradient(135deg, rgba(215, 246, 241, 0.75), rgba(255, 255, 255, 0.9)),
+    var(--card);
+}
+
+.landing-card .brand-mark {
+  width: 44px;
+  height: 44px;
+}

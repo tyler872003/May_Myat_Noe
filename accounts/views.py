@@ -29,6 +29,12 @@ def mask_email(email):
     return f"{name[:2]}***@{domain}"
 
 
+def welcome(request):
+    if request.user.is_authenticated:
+        return redirect("dashboard")
+    return render(request, "accounts/welcome.html")
+
+
 def register(request):
     if request.method == "POST":
         form = RegisterForm(request.POST)
